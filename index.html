@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>社群發文排程</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&family=DM+Mono:ital,wght@0,400;0,500&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#F6F4F0;
+  --surface:#FFFFFF;
+  --surface2:#EFECE7;
+  --border:#E2DDD7;
+  --border2:#C9C3BB;
+  --text:#1C1916;
+  --text2:#6E6560;
+  --text3:#A8A19A;
+  --accent:#2B5740;
+  --accent-bg:#E6EFE9;
+  --accent-text:#1A3A28;
+  --sans:'Noto Sans TC',sans-serif;
+  --mono:'DM Mono',monospace;
+  --r:8px;
+  --rl:14px;
+}
+body{font-family:var(--sans);background:var(--bg);color:var(--text);font-size:14px;line-height:1.6}
+
+/* ── Header ── */
+header{
+  background:var(--text);
+  color:#F6F4F0;
+  height:56px;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 1.5rem;
+  position:sticky;top:0;z-index:200;
+}
+.logo{font-size:13px;font-weight:500;letter-spacing:.1em;text-transform:uppercase}
+.logo em{color:#7A736C;font-style:normal;font-weight:300}
+.hd-right{display:flex;align-items:center;gap:10px}
+.hd-count{font-family:var(--mono);font-size:11px;color:#7A736C;background:rgba(255,255,255,.07);padding:4px 10px;border-radius:20px}
+
+/* ── Nav tabs ── */
+.nav{
+  background:var(--surface);
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:center;
+  padding:0 1.5rem;
+  gap:2px;
+  position:sticky;top:56px;z-index:190;
+}
+.nav-tab{
+  padding:10px 18px;
+  font-size:12.5px;font-weight:500;
+  background:none;border:none;border-bottom:2px solid transparent;
+  color:var(--text2);cursor:pointer;
+  margin-bottom:-1px;
+  transition:color .15s,border-color .15s;
+  font-family:var(--sans);
+}
+.nav-tab:hover{color:var(--text)}
+.nav-tab.active{color:var(--accent);border-bottom-color:var(--accent)}
+
+/* ── Main layout ── */
+.page{display:none;padding:1.5rem}
+.page.active{display:block}
+
+/* ── Form panel ── */
+.form-panel{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--rl);padding:1.5rem;
+  max-width:720px;
+}
+.form-title{font-size:13px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:var(--text3);margin-bottom:1.25rem}
+.fg{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.fg-full{grid-column:1/-1}
+.field label{display:block;font-size:11.5px;font-weight:500;color:var(--text2);margin-bottom:4px;letter-spacing:.03em}
+.field input,.field select,.field textarea{
+  width:100%;border:1px solid var(--border);border-radius:var(--r);
+  padding:8px 11px;font-size:13.5px;font-family:var(--sans);
+  background:var(--bg);color:var(--text);outline:none;
+  transition:border-color .15s,box-shadow .15s;
+  -webkit-appearance:none;appearance:none;
+}
+.field select{
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='11' height='11' viewBox='0 0 24 24' fill='none' stroke='%236E6560' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 10px center;padding-right:30px;
+}
+.field input:focus,.field select:focus,.field textarea:focus{
+  border-color:var(--accent);box-shadow:0 0 0 3px rgba(43,87,64,.1);
+}
+.field textarea{min-height:72px;resize:vertical;line-height:1.5}
+.btn-row{display:flex;gap:8px;margin-top:1.25rem;flex-wrap:wrap}
+.btn{
+  display:inline-flex;align-items:center;gap:6px;
+  border:1px solid var(--border2);border-radius:var(--r);
+  padding:8px 16px;font-size:13px;font-family:var(--sans);font-weight:500;
+  cursor:pointer;background:transparent;color:var(--text);
+  transition:background .15s,border-color .15s;
+}
+.btn:hover{background:var(--surface2)}
+.btn-primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn-primary:hover{background:#224832}
+.btn-sm{padding:5px 10px;font-size:11.5px}
+.btn-ghost{border-color:transparent;color:var(--text2)}
+.btn-ghost:hover{background:var(--surface2);color:var(--text)}
+.btn-danger{color:#8B2E2E;border-color:#D9B8B8}
+.btn-danger:hover{background:#F5EAEA}
+
+/* ── List / table ── */
+.filter-bar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:1.25rem}
+.filter-bar select{
+  border:1px solid var(--border);border-radius:var(--r);
+  padding:6px 28px 6px 10px;font-size:12px;font-family:var(--sans);
+  background-color:var(--surface);color:var(--text);
+  cursor:pointer;outline:none;-webkit-appearance:none;appearance:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%236E6560' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 8px center;
+}
+.filter-bar select:focus{border-color:var(--accent);box-shadow:0 0 0 2px rgba(43,87,64,.1)}
+.pill{font-family:var(--mono);font-size:11px;color:var(--text3);background:var(--surface);border:1px solid var(--border);padding:4px 10px;border-radius:20px;margin-left:auto}
+.table-wrap{border:1px solid var(--border);border-radius:var(--rl);overflow:hidden;overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:12.5px}
+thead th{
+  background:var(--surface2);font-weight:500;
+  font-size:11px;letter-spacing:.07em;text-transform:uppercase;color:var(--text2);
+  padding:9px 13px;text-align:left;border-bottom:1px solid var(--border);white-space:nowrap;
+}
+tbody tr{border-bottom:1px solid var(--border);transition:background .1s}
+tbody tr:last-child{border-bottom:none}
+tbody tr:hover{background:#FAF8F5}
+tbody td{padding:10px 13px;vertical-align:top}
+.mono{font-family:var(--mono);font-size:12px}
+.muted{color:var(--text2)}
+.strong{font-weight:500}
+
+/* ── Type badges ── */
+.badge{display:inline-block;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:500;white-space:nowrap}
+.t1{background:#EEEDFE;color:#3C3489}
+.t2{background:#E1F5EE;color:#085041}
+.t3{background:#FAEEDA;color:#633806}
+.t4{background:#E6F1FB;color:#0C447C}
+.t5{background:#EAF3DE;color:#27500A}
+.t6{background:#FBEAF0;color:#72243E}
+.t7{background:#FAECE7;color:#712B13}
+
+/* ── Status chips ── */
+.chip{display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:500;border:1px solid;white-space:nowrap}
+.s0{background:#F0EDE8;color:#6B6459;border-color:#D0CBC3}
+.s1{background:#FFF8E8;color:#8B6200;border-color:#E8D090}
+.s2{background:#E8F0FB;color:#1A4A8A;border-color:#A8C0E8}
+.s3{background:#E8F0EA;color:#1E5A2E;border-color:#A0C8A8}
+.s4{background:#F0EDE8;color:#9A9288;border-color:#C8C2B8}
+
+/* ── Calendar ── */
+.cal-header{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:1.25rem;
+}
+.cal-nav{display:flex;align-items:center;gap:8px}
+.cal-ym{font-size:18px;font-weight:500;min-width:140px}
+.cal-nav-btn{
+  width:32px;height:32px;border:1px solid var(--border);border-radius:var(--r);
+  background:var(--surface);cursor:pointer;display:flex;align-items:center;justify-content:center;
+  font-size:16px;color:var(--text2);transition:background .15s,color .15s;
+}
+.cal-nav-btn:hover{background:var(--surface2);color:var(--text)}
+.cal-today-btn{
+  padding:6px 14px;border:1px solid var(--border);border-radius:var(--r);
+  background:var(--surface);cursor:pointer;font-size:12px;font-family:var(--sans);color:var(--text2);
+  transition:background .15s;
+}
+.cal-today-btn:hover{background:var(--surface2);color:var(--text)}
+
+.cal-grid{border:1px solid var(--border);border-radius:var(--rl);overflow:hidden}
+.cal-dow{
+  display:grid;grid-template-columns:repeat(7,1fr);
+  background:var(--surface2);border-bottom:1px solid var(--border);
+}
+.cal-dow-cell{
+  padding:8px 0;text-align:center;
+  font-size:11px;font-weight:500;letter-spacing:.06em;text-transform:uppercase;color:var(--text2);
+}
+.cal-days{display:grid;grid-template-columns:repeat(7,1fr)}
+.cal-day{
+  border-right:1px solid var(--border);border-bottom:1px solid var(--border);
+  min-height:110px;padding:6px;background:var(--surface);
+  transition:background .1s;
+  overflow:hidden;
+}
+.cal-day:nth-child(7n){border-right:none}
+.cal-day.other-month{background:var(--bg)}
+.cal-day.today .cal-day-num{
+  background:var(--accent);color:#fff;
+  width:22px;height:22px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-weight:500;
+}
+.cal-day-num{font-size:12px;font-weight:500;color:var(--text2);margin-bottom:4px;width:22px;text-align:center}
+.cal-day.other-month .cal-day-num{color:var(--text3)}
+.cal-events{display:flex;flex-direction:column;gap:2px}
+.cal-event{
+  padding:2px 6px;border-radius:4px;font-size:10.5px;font-weight:500;
+  cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  transition:opacity .1s;line-height:1.5;
+}
+.cal-event:hover{opacity:.8}
+.more-tag{font-size:10px;color:var(--text3);padding:1px 4px;cursor:pointer}
+.more-tag:hover{color:var(--accent)}
+
+/* ── Modal ── */
+.modal-overlay{
+  position:fixed;inset:0;background:rgba(28,25,22,.45);
+  display:flex;align-items:center;justify-content:center;
+  z-index:500;opacity:0;pointer-events:none;transition:opacity .2s;
+}
+.modal-overlay.open{opacity:1;pointer-events:all}
+.modal{
+  background:var(--surface);border-radius:var(--rl);
+  width:min(520px,95vw);max-height:80vh;overflow-y:auto;
+  transform:translateY(12px);transition:transform .2s;
+  box-shadow:0 8px 40px rgba(0,0,0,.18);
+}
+.modal-overlay.open .modal{transform:translateY(0)}
+.modal-head{
+  display:flex;align-items:flex-start;justify-content:space-between;
+  padding:1.25rem 1.5rem 1rem;border-bottom:1px solid var(--border);
+}
+.modal-title{font-size:16px;font-weight:500}
+.modal-date{font-family:var(--mono);font-size:12px;color:var(--text2);margin-top:2px}
+.modal-close{
+  width:28px;height:28px;border:1px solid var(--border);border-radius:var(--r);
+  background:transparent;cursor:pointer;font-size:16px;color:var(--text2);
+  display:flex;align-items:center;justify-content:center;transition:background .15s;flex-shrink:0;
+}
+.modal-close:hover{background:var(--surface2)}
+.modal-body{padding:1.25rem 1.5rem}
+.modal-item{
+  border:1px solid var(--border);border-radius:var(--r);
+  padding:12px 14px;margin-bottom:10px;
+}
+.modal-item:last-child{margin-bottom:0}
+.modal-item-title{font-weight:500;font-size:13.5px;margin-bottom:6px}
+.modal-item-meta{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:6px}
+.modal-item-note{font-size:12.5px;color:var(--text2);line-height:1.6;border-top:1px solid var(--border);padding-top:8px;margin-top:8px}
+
+/* ── Export ── */
+.export-wrap{max-width:720px}
+.export-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--rl);padding:1.5rem}
+.export-card p{font-size:13px;color:var(--text2);margin-bottom:1rem;line-height:1.7}
+#copy-out{
+  width:100%;min-height:140px;font-family:var(--mono);font-size:11.5px;
+  border:1px solid var(--border);border-radius:var(--r);padding:12px;
+  background:var(--bg);color:var(--text);resize:vertical;margin-top:12px;line-height:1.6;outline:none;
+}
+
+/* ── Toast ── */
+.toast{
+  position:fixed;bottom:1.5rem;right:1.5rem;
+  background:var(--text);color:#F6F4F0;
+  padding:10px 18px;border-radius:var(--r);font-size:13px;font-weight:500;
+  opacity:0;transform:translateY(8px);
+  transition:all .2s;pointer-events:none;z-index:999;
+}
+.toast.show{opacity:1;transform:translateY(0)}
+
+/* ── Empty ── */
+.empty{text-align:center;padding:4rem 2rem;color:var(--text3)}
+.empty-icon{font-size:36px;margin-bottom:10px;opacity:.5}
+
+/* ── Legend ── */
+.legend{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:1.25rem}
+.legend-item{display:flex;align-items:center;gap:5px;font-size:11.5px;color:var(--text2)}
+.legend-dot{width:10px;height:10px;border-radius:3px;flex-shrink:0}
+
+@media(max-width:600px){
+  .cal-day{min-height:70px;padding:4px}
+  .cal-day-num{font-size:11px}
+  .cal-event{font-size:9.5px}
+  .cal-ym{font-size:15px}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">社群排程 <em>/ Content Scheduler</em></div>
+  <div class="hd-right">
+    <div class="hd-count" id="hd-count">0 則發文</div>
+  </div>
+</header>
+
+<nav class="nav">
+  <button class="nav-tab active" onclick="showPage('cal')">📅 月曆視圖</button>
+  <button class="nav-tab" onclick="showPage('list')">📋 排程總表</button>
+  <button class="nav-tab" onclick="showPage('add')">＋ 新增發文</button>
+  <button class="nav-tab" onclick="showPage('export')">↗ 匯出</button>
+</nav>
+
+<!-- ════ 月曆 ════ -->
+<div class="page active" id="page-cal">
+  <div class="cal-header">
+    <div class="cal-nav">
+      <button class="cal-nav-btn" onclick="changeMonth(-1)">‹</button>
+      <button class="cal-nav-btn" onclick="changeMonth(1)">›</button>
+      <div class="cal-ym" id="cal-ym"></div>
+      <button class="cal-today-btn" onclick="goToday()">今天</button>
+    </div>
+  </div>
+  <div class="legend" id="legend"></div>
+  <div class="cal-grid">
+    <div class="cal-dow">
+      <div class="cal-dow-cell">日</div>
+      <div class="cal-dow-cell">一</div>
+      <div class="cal-dow-cell">二</div>
+      <div class="cal-dow-cell">三</div>
+      <div class="cal-dow-cell">四</div>
+      <div class="cal-dow-cell">五</div>
+      <div class="cal-dow-cell">六</div>
+    </div>
+    <div class="cal-days" id="cal-days"></div>
+  </div>
+</div>
+
+<!-- ════ 排程總表 ════ -->
+<div class="page" id="page-list">
+  <div class="filter-bar">
+    <select id="fil-type" onchange="renderList()">
+      <option value="">全部類型</option>
+      <option value="1">檔期活動</option>
+      <option value="2">專欄文章</option>
+      <option value="3">檔期主推品項</option>
+      <option value="4">閱讀器</option>
+      <option value="5">非閱讀器</option>
+      <option value="6">特殊節日</option>
+      <option value="7">即時話題</option>
+    </select>
+    <select id="fil-status" onchange="renderList()">
+      <option value="">全部狀態</option>
+      <option>待撰寫</option><option>撰寫中</option><option>待審核</option><option>已排程</option><option>已發佈</option>
+    </select>
+    <select id="fil-owner" onchange="renderList()"><option value="">全部負責人</option></select>
+    <span class="pill" id="list-count">0 則</span>
+  </div>
+  <div class="table-wrap" id="list-table"></div>
+</div>
+
+<!-- ════ 新增 ════ -->
+<div class="page" id="page-add">
+  <div class="form-panel">
+    <div class="form-title">新增發文</div>
+    <div class="fg">
+      <div class="field"><label>發文日期</label><input type="date" id="f-date"></div>
+      <div class="field"><label>發文時間</label><input type="time" id="f-time" value="10:00"></div>
+      <div class="field">
+        <label>平台</label>
+        <select id="f-platform">
+          <option>Facebook</option><option>Instagram</option>
+          <option>Facebook + Instagram</option><option>Line</option>
+          <option>Threads</option><option>其他</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>內容類型</label>
+        <select id="f-type">
+          <option value="1">檔期活動</option><option value="2">專欄文章</option>
+          <option value="3">檔期主推品項</option><option value="4">閱讀器</option>
+          <option value="5">非閱讀器</option><option value="6">特殊節日</option>
+          <option value="7">即時話題</option>
+        </select>
+      </div>
+      <div class="field fg-full"><label>主題 / 標題</label><input type="text" id="f-title" placeholder="例：618 開跑！電子書最高 66 折"></div>
+      <div class="field fg-full"><label>發文說明（給下屬的指示）</label><textarea id="f-note" placeholder="說明要傳達什麼、用哪些素材、連結、hashtag 等"></textarea></div>
+      <div class="field"><label>負責人</label><input type="text" id="f-owner" placeholder="姓名或暱稱"></div>
+      <div class="field">
+        <label>狀態</label>
+        <select id="f-status">
+          <option>待撰寫</option><option>撰寫中</option><option>待審核</option><option>已排程</option><option>已發佈</option>
+        </select>
+      </div>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-primary" onclick="addPost()">＋ 新增至排程</button>
+      <button class="btn btn-ghost" onclick="clearForm()">清空</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════ 匯出 ════ -->
+<div class="page" id="page-export">
+  <div class="export-wrap">
+    <div class="export-card">
+      <p>選擇格式後產生文字，複製貼入試算表或 Notion。<br>
+      <strong>TSV 格式</strong>：直接貼入 Google Sheets / Excel，自動分欄。<br>
+      <strong>Markdown</strong>：貼入 Notion 或其他支援 Markdown 的工具。</p>
+      <div class="btn-row">
+        <button class="btn btn-primary" onclick="buildExport('tsv')">產生 TSV（試算表用）</button>
+        <button class="btn" onclick="buildExport('md')">產生 Markdown</button>
+      </div>
+      <textarea id="copy-out" readonly placeholder="點上方按鈕產生內容…"></textarea>
+      <div class="btn-row" style="margin-top:10px">
+        <button class="btn" onclick="copyOut()">複製全部</button>
+        <button class="btn btn-danger" onclick="if(confirm('確定要清除全部資料？'))clearAll()">清除全部資料</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════ Modal ════ -->
+<div class="modal-overlay" id="modal-overlay" onclick="closeModal(event)">
+  <div class="modal" id="modal">
+    <div class="modal-head">
+      <div>
+        <div class="modal-title" id="modal-title"></div>
+        <div class="modal-date" id="modal-date"></div>
+      </div>
+      <button class="modal-close" onclick="closeModalDirect()">✕</button>
+    </div>
+    <div class="modal-body" id="modal-body"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ── Data ──────────────────────────────────────────────
+const TYPES={1:'檔期活動',2:'專欄文章',3:'檔期主推品項',4:'閱讀器',5:'非閱讀器',6:'特殊節日',7:'即時話題'};
+const TCLS=['','t1','t2','t3','t4','t5','t6','t7'];
+const TCOLORS={
+  1:{bg:'#EEEDFE',text:'#3C3489'},
+  2:{bg:'#E1F5EE',text:'#085041'},
+  3:{bg:'#FAEEDA',text:'#633806'},
+  4:{bg:'#E6F1FB',text:'#0C447C'},
+  5:{bg:'#EAF3DE',text:'#27500A'},
+  6:{bg:'#FBEAF0',text:'#72243E'},
+  7:{bg:'#FAECE7',text:'#712B13'},
+};
+const STATUSES=['待撰寫','撰寫中','待審核','已排程','已發佈'];
+const SCLS=['s0','s1','s2','s3','s4'];
+const DOW=['日','一','二','三','四','五','六'];
+
+let posts=JSON.parse(localStorage.getItem('sched_v2')||'[]');
+let calYear=new Date().getFullYear();
+let calMonth=new Date().getMonth();
+
+function save(){localStorage.setItem('sched_v2',JSON.stringify(posts));updateHdCount();}
+function updateHdCount(){document.getElementById('hd-count').textContent=posts.length+' 則發文';}
+
+// ── Toast ─────────────────────────────────────────────
+function toast(msg){
+  const el=document.getElementById('toast');
+  el.textContent=msg;el.classList.add('show');
+  setTimeout(()=>el.classList.remove('show'),2200);
+}
+
+// ── Nav ───────────────────────────────────────────────
+function showPage(id){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  const idx={cal:0,list:1,add:2,export:3}[id];
+  document.querySelectorAll('.nav-tab')[idx].classList.add('active');
+  if(id==='cal')renderCal();
+  if(id==='list')renderList();
+}
+
+// ── Add ───────────────────────────────────────────────
+function addPost(){
+  const date=document.getElementById('f-date').value;
+  const time=document.getElementById('f-time').value;
+  const platform=document.getElementById('f-platform').value;
+  const type=document.getElementById('f-type').value;
+  const title=document.getElementById('f-title').value.trim();
+  const note=document.getElementById('f-note').value.trim();
+  const owner=document.getElementById('f-owner').value.trim();
+  const status=document.getElementById('f-status').value;
+  if(!date){toast('請選擇發文日期');return;}
+  if(!title){toast('請填寫主題 / 標題');return;}
+  posts.push({id:Date.now(),date,time,platform,type,title,note,owner,status});
+  posts.sort((a,b)=>(a.date+a.time).localeCompare(b.date+b.time));
+  save();clearForm();
+  toast('已新增！');
+  showPage('cal');
+}
+function clearForm(){
+  ['f-date','f-title','f-note','f-owner'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('f-time').value='10:00';
+  document.getElementById('f-type').value='1';
+  document.getElementById('f-status').value='待撰寫';
+}
+function deletePost(id){
+  if(!confirm('確定刪除這則發文？'))return;
+  posts=posts.filter(p=>p.id!==id);
+  save();renderList();toast('已刪除');
+}
+function clearAll(){posts=[];save();renderList();renderCal();toast('已清除所有資料');}
+
+// ── Calendar ──────────────────────────────────────────
+function goToday(){calYear=new Date().getFullYear();calMonth=new Date().getMonth();renderCal();}
+function changeMonth(d){
+  calMonth+=d;
+  if(calMonth>11){calMonth=0;calYear++;}
+  if(calMonth<0){calMonth=11;calYear--;}
+  renderCal();
+}
+
+function renderCal(){
+  const ymEl=document.getElementById('cal-ym');
+  ymEl.textContent=calYear+'年 '+(calMonth+1)+'月';
+
+  const today=new Date();
+  const firstDay=new Date(calYear,calMonth,1).getDay();
+  const daysInMonth=new Date(calYear,calMonth+1,0).getDate();
+  const daysInPrev=new Date(calYear,calMonth,0).getDate();
+
+  // legend
+  const usedTypes=[...new Set(posts.filter(p=>{
+    const [y,m]=p.date.split('-').map(Number);
+    return y===calYear&&m-1===calMonth;
+  }).map(p=>p.type))].sort();
+  const leg=document.getElementById('legend');
+  leg.innerHTML=usedTypes.map(t=>`<div class="legend-item"><div class="legend-dot" style="background:${TCOLORS[t].bg};border:1px solid ${TCOLORS[t].text}40"></div>${TYPES[t]}</div>`).join('');
+
+  const container=document.getElementById('cal-days');
+  container.innerHTML='';
+
+  // prev month filler
+  for(let i=0;i<firstDay;i++){
+    const d=daysInPrev-firstDay+1+i;
+    const cell=document.createElement('div');
+    cell.className='cal-day other-month';
+    cell.innerHTML=`<div class="cal-day-num">${d}</div>`;
+    container.appendChild(cell);
+  }
+
+  // current month
+  for(let d=1;d<=daysInMonth;d++){
+    const dateStr=calYear+'-'+String(calMonth+1).padStart(2,'0')+'-'+String(d).padStart(2,'0');
+    const dayPosts=posts.filter(p=>p.date===dateStr).sort((a,b)=>a.time.localeCompare(b.time));
+    const isToday=today.getFullYear()===calYear&&today.getMonth()===calMonth&&today.getDate()===d;
+
+    const cell=document.createElement('div');
+    cell.className='cal-day'+(isToday?' today':'');
+
+    const numEl=document.createElement('div');
+    numEl.className='cal-day-num';
+    if(isToday){
+      const inner=document.createElement('div');
+      inner.style.cssText='background:var(--accent);color:#fff;width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:500;font-size:12px';
+      inner.textContent=d;
+      numEl.appendChild(inner);
+    } else {
+      numEl.textContent=d;
+    }
+    cell.appendChild(numEl);
+
+    const eventsEl=document.createElement('div');
+    eventsEl.className='cal-events';
+
+    const MAX_SHOW=3;
+    dayPosts.slice(0,MAX_SHOW).forEach(p=>{
+      const c=TCOLORS[p.type]||{bg:'#eee',text:'#333'};
+      const ev=document.createElement('div');
+      ev.className='cal-event';
+      ev.style.cssText=`background:${c.bg};color:${c.text}`;
+      ev.textContent=(p.time?p.time.slice(0,5)+' ':'')+p.title;
+      ev.title=p.title;
+      ev.onclick=()=>openModal(dateStr,dayPosts);
+      eventsEl.appendChild(ev);
+    });
+
+    if(dayPosts.length>MAX_SHOW){
+      const more=document.createElement('div');
+      more.className='more-tag';
+      more.textContent=`+${dayPosts.length-MAX_SHOW} 則`;
+      more.onclick=()=>openModal(dateStr,dayPosts);
+      eventsEl.appendChild(more);
+    }
+
+    cell.appendChild(eventsEl);
+    container.appendChild(cell);
+  }
+
+  // next month filler
+  const total=firstDay+daysInMonth;
+  const remaining=(7-total%7)%7;
+  for(let d=1;d<=remaining;d++){
+    const cell=document.createElement('div');
+    cell.className='cal-day other-month';
+    cell.innerHTML=`<div class="cal-day-num">${d}</div>`;
+    container.appendChild(cell);
+  }
+}
+
+// ── Modal ─────────────────────────────────────────────
+function openModal(dateStr,dayPosts){
+  const [y,m,d]=dateStr.split('-');
+  document.getElementById('modal-title').textContent=`${y}年${parseInt(m)}月${parseInt(d)}日`;
+  document.getElementById('modal-date').textContent=`共 ${dayPosts.length} 則發文`;
+
+  const body=document.getElementById('modal-body');
+  body.innerHTML=dayPosts.map(p=>{
+    const si=STATUSES.indexOf(p.status);
+    return `<div class="modal-item">
+      <div class="modal-item-title">${esc(p.title)}</div>
+      <div class="modal-item-meta">
+        <span class="badge ${TCLS[p.type]}">${TYPES[p.type]}</span>
+        <span class="chip ${SCLS[si]||'s0'}">${p.status}</span>
+        <span style="font-family:var(--mono);font-size:11.5px;color:var(--text2)">${p.time} · ${p.platform}</span>
+        ${p.owner?`<span style="font-size:12px;color:var(--text2)">👤 ${esc(p.owner)}</span>`:''}
+      </div>
+      ${p.note?`<div class="modal-item-note">${esc(p.note).replace(/\n/g,'<br>')}</div>`:''}
+    </div>`;
+  }).join('');
+
+  document.getElementById('modal-overlay').classList.add('open');
+}
+function closeModal(e){if(e.target===document.getElementById('modal-overlay'))closeModalDirect();}
+function closeModalDirect(){document.getElementById('modal-overlay').classList.remove('open');}
+
+// ── List ──────────────────────────────────────────────
+function renderList(){
+  const ft=document.getElementById('fil-type').value;
+  const fs=document.getElementById('fil-status').value;
+  const fo=document.getElementById('fil-owner').value;
+
+  const owners=[...new Set(posts.map(p=>p.owner).filter(Boolean))];
+  const ownerSel=document.getElementById('fil-owner');
+  const cur=ownerSel.value;
+  ownerSel.innerHTML='<option value="">全部負責人</option>'+owners.map(o=>`<option${o===cur?' selected':''}>${o}</option>`).join('');
+
+  let rows=posts.filter(p=>{
+    if(ft&&p.type!==ft)return false;
+    if(fs&&p.status!==fs)return false;
+    if(fo&&p.owner!==fo)return false;
+    return true;
+  });
+  document.getElementById('list-count').textContent=rows.length+' 則';
+
+  const c=document.getElementById('list-table');
+  if(!rows.length){c.innerHTML=`<div class="empty"><div class="empty-icon">🗂</div><p>沒有符合條件的發文</p></div>`;return;}
+
+  c.innerHTML=`<table>
+<thead><tr>
+  <th>日期</th><th>時間</th><th>平台</th><th>類型</th><th>主題 / 標題</th><th>說明</th><th>負責人</th><th>狀態</th><th></th>
+</tr></thead>
+<tbody>${rows.map(p=>{
+  const si=STATUSES.indexOf(p.status);
+  return `<tr>
+    <td class="mono">${p.date}</td>
+    <td class="mono muted">${p.time}</td>
+    <td style="font-size:12px;color:var(--text2);white-space:nowrap">${p.platform}</td>
+    <td><span class="badge ${TCLS[p.type]}">${TYPES[p.type]}</span></td>
+    <td class="strong" style="max-width:180px">${esc(p.title)}</td>
+    <td style="font-size:12px;color:var(--text2);max-width:200px">${p.note?esc(p.note):'<span style="color:var(--text3)">—</span>'}</td>
+    <td style="font-size:12.5px">${p.owner||'<span style="color:var(--text3)">—</span>'}</td>
+    <td><span class="chip ${SCLS[si]||'s0'}">${p.status}</span></td>
+    <td><button class="btn btn-danger btn-sm" onclick="deletePost(${p.id})">刪除</button></td>
+  </tr>`;}).join('')}</tbody></table>`;
+}
+
+// ── Export ────────────────────────────────────────────
+function buildExport(fmt){
+  const headers=['日期','時間','平台','內容類型','主題/標題','說明','負責人','狀態'];
+  const rows=posts.map(p=>[p.date,p.time,p.platform,TYPES[p.type],p.title,p.note,p.owner,p.status]);
+  let out='';
+  if(fmt==='tsv'){out=[headers,...rows].map(r=>r.join('\t')).join('\n');}
+  else{const sep=headers.map(()=>'---');out=[headers,sep,...rows].map(r=>'| '+r.join(' | ')+' |').join('\n');}
+  document.getElementById('copy-out').value=out||'（尚無資料）';
+}
+function copyOut(){
+  const el=document.getElementById('copy-out');el.select();document.execCommand('copy');toast('已複製！');
+}
+
+// ── Helpers ───────────────────────────────────────────
+function esc(s){
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// ── Init ──────────────────────────────────────────────
+updateHdCount();
+renderCal();
+</script>
+</body>
+</html>
